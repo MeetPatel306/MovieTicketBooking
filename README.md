@@ -1,24 +1,16 @@
 # 🎬 MovieTicketBooking
 ### Online Movie Ticket Booking Platform
 
-![React](https://img.shields.io/badge/Frontend-React-blue)
-![Vite](https://img.shields.io/badge/Build-Vite-purple)
-![Node](https://img.shields.io/badge/Backend-Node.js-green)
-![MongoDB](https://img.shields.io/badge/Database-MongoDB-success)
-![Express](https://img.shields.io/badge/API-Express-black)
-![License](https://img.shields.io/badge/License-MIT-yellow)
-
 MovieTicketBooking is a full-stack web app for browsing movies, selecting theaters and showtimes, choosing seats in real time, and completing ticket bookings with payment details.
 
 ---
 
 # 🌐 Live Demo
 
-**Frontend (Local):** `http://localhost:5173`  
+**Frontend (Local):** `http://localhost:5173`
 **Backend (Local):** `http://localhost:5000`
 
-**Repository:** `https://github.com/<your-username>/MovieTicketBooking`
-
+**Repository:** `https://github.com/<MeetPatel306>/MovieTicketBooking`
 ---
 
 # ✨ Features
@@ -172,17 +164,6 @@ Cancel booking (if allowed).
 
 ---
 
-# ⚡ Installation
-
-Clone the repository:
-
-```bash
-git clone https://github.com/<your-username>/MovieTicketBooking.git
-cd MovieTicketBooking
-```
-
----
-
 ## Frontend Setup
 
 ```bash
@@ -228,11 +209,10 @@ Backend runs at: `http://localhost:5000`
 # 👨‍💻 Authors
 
 **Your Name**  
-`https://github.com/<your-username>`
+`https://github.com/<MeetPatel306>`
 
 ---
 
 # ⭐ Support
 
 If you like this project, please star the repository and share your feedback.
-
