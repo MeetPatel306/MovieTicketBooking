@@ -71,9 +71,10 @@ const Booking = () => {
 
   // Get user bookings from database
   const getUserBookings = async () => {
-    if (!user?.name) return [];
+    const userName = user?.name?.trim();
+    if (!userName) return [];
     try {
-      const res = await axios.get(`http://localhost:5000/api/user-bookings/${user.name}`);
+      const res = await axios.get(`http://localhost:5000/api/user-bookings/${encodeURIComponent(userName)}`);
       if (res.data.success) {
         return res.data.data;
       }
@@ -358,7 +359,7 @@ const Booking = () => {
       }
 
       const bookingData = {
-        login_name: user.name,
+        login_name: user.name?.trim(),
         password: user.password || "default",
         moviename: movie.title,
         selectedseatname: selectedSeats,
@@ -372,7 +373,7 @@ const Booking = () => {
           ? { cardNumber, expiry, cvv }
           : { upiId },
         totalamount: totalAmount,
-        bookingId: `BK${Date.now()}_${user.name.substring(0, 3).toUpperCase()}`
+        bookingId: `BK${Date.now()}_${(user.name || 'USR').substring(0, 3).toUpperCase()}`
       };
 
       console.log('Booking data being sent:', bookingData);

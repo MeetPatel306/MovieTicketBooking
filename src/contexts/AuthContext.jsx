@@ -14,25 +14,40 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const normalizeUser = (userData = {}) => {
+    const fallbackEmail = userData.email || '';
+    const fallbackName = fallbackEmail ? fallbackEmail.split('@')[0] : 'User';
+    return {
+      id: userData.id || userData._id || '1',
+      name: userData.name || fallbackName,
+      email: fallbackEmail,
+      avatar:
+        userData.avatar ||
+        'https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=400',
+      memberSince: userData.memberSince || userData.signupTime || userData.createdAt || new Date().toISOString(),
+      createdAt: userData.createdAt || userData.signupTime || new Date().toISOString()
+    };
+  };
+
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(normalizeUser(parsedUser));
+      } catch (error) {
+        localStorage.removeItem('user');
+      }
     }
     setIsLoading(false);
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (email, password, userData = null) => {
     setIsLoading(true);
     try {
-      const mockUser = {
-        id: '1',
-        name: 'John Doe',
-        email: email,
-        avatar: 'https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=400'
-      };
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      const resolvedUser = normalizeUser(userData || { email });
+      setUser(resolvedUser);
+      localStorage.setItem('user', JSON.stringify(resolvedUser));
       return true;
     } catch (error) {
       return false;
@@ -44,14 +59,9 @@ export const AuthProvider = ({ children }) => {
   const signup = async (name, email, password) => {
     setIsLoading(true);
     try {
-      const mockUser = {
-        id: '1',
-        name: name,
-        email: email,
-        avatar: 'https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=400'
-      };
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      const resolvedUser = normalizeUser({ name, email });
+      setUser(resolvedUser);
+      localStorage.setItem('user', JSON.stringify(resolvedUser));
       return true;
     } catch (error) {
       return false;
@@ -65,8 +75,17 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
   };
 
+  const updateProfile = (updates = {}) => {
+    setUser((prevUser) => {
+      if (!prevUser) return prevUser;
+      const updatedUser = normalizeUser({ ...prevUser, ...updates });
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      return updatedUser;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, updateProfile, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

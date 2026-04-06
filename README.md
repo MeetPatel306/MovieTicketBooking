@@ -1,1 +1,238 @@
+# 🎬 MovieTicketBooking
+### Online Movie Ticket Booking Platform
+
+![React](https://img.shields.io/badge/Frontend-React-blue)
+![Vite](https://img.shields.io/badge/Build-Vite-purple)
+![Node](https://img.shields.io/badge/Backend-Node.js-green)
+![MongoDB](https://img.shields.io/badge/Database-MongoDB-success)
+![Express](https://img.shields.io/badge/API-Express-black)
+![License](https://img.shields.io/badge/License-MIT-yellow)
+
+MovieTicketBooking is a full-stack web app for browsing movies, selecting theaters and showtimes, choosing seats in real time, and completing ticket bookings with payment details.
+
+---
+
+# 🌐 Live Demo
+
+**Frontend (Local):** `http://localhost:5173`  
+**Backend (Local):** `http://localhost:5000`
+
+**Repository:** `https://github.com/<your-username>/MovieTicketBooking`
+
+---
+
+# ✨ Features
+
+- User signup/login with OTP flow
+- Movie listing and movie details pages
+- Theater, date, and time slot selection
+- Real-time seat availability checks
+- Seat conflict prevention during booking
+- Booking history and profile dashboard
+- Ticket download support from profile
+- Booking statistics (tickets, spend, recent bookings)
+
+---
+
+# ⚙️ Workflow
+
+```text
+User Signup/Login
+      │
+      ▼
+Browse Movies
+      │
+      ▼
+Select Movie + Theater + Date + Time
+      │
+      ▼
+Live Seat Availability Check
+      │
+      ▼
+Choose Seats
+      │
+      ▼
+Payment (Card/UPI)
+      │
+      ▼
+Booking Stored in MongoDB
+      │
+      ▼
+View Booking History in Profile
+```
+
+---
+
+# 🏗 System Architecture
+
+```text
+             ┌────────────────────┐
+             │      Frontend      │
+             │ React + Vite SPA   │
+             └─────────┬──────────┘
+                       │ HTTP API
+                       ▼
+             ┌────────────────────┐
+             │      Backend       │
+             │   Node + Express   │
+             └─────────┬──────────┘
+                       │
+            ┌──────────┴──────────┐
+            ▼                     ▼
+     MongoDB (Users,         Booking + Payment
+      Auth, Bookings)          Route Services
+```
+
+---
+
+# 🛠 Tech Stack
+
+**Frontend**
+- React 18
+- Vite
+- Tailwind CSS
+- Framer Motion
+- Axios
+- React Router
+
+**Backend**
+- Node.js
+- Express.js
+- Mongoose
+- bcrypt
+- CORS
+
+**Database**
+- MongoDB (`movieproject`)
+
+---
+
+# 📂 Project Structure
+
+```text
+MovieTicketBooking
+│
+├── src
+│   ├── components
+│   ├── contexts
+│   ├── pages
+│   └── App.jsx
+│
+├── backend
+│   ├── config
+│   ├── models
+│   ├── routes
+│   └── server.js
+│
+└── README.md
+```
+
+---
+
+# 📡 API Documentation
+
+Base URL: `http://localhost:5000/api`
+
+### Authentication
+
+**POST** `/signup`  
+Create a new user account.
+
+**POST** `/login`  
+Authenticate user and log login activity.
+
+**GET** `/profile/:email`  
+Fetch user profile by email.
+
+### Booking
+
+**POST** `/create-booking`  
+Create booking + payment record with seat conflict checks.
+
+**POST** `/get-show-bookings`  
+Fetch all bookings for a specific show (seat status).
+
+**POST** `/check-seat-availability`  
+Check whether requested seats are available.
+
+**GET** `/user-bookings/:login_name`  
+Fetch all bookings for a user.
+
+**GET** `/booking-details/:bookingId`  
+Get booking and payment details.
+
+**GET** `/payment-details/:bookingId`  
+Fetch safe payment metadata.
+
+**GET** `/booking-stats/:login_name`  
+Get booking statistics for a user.
+
+**PATCH** `/cancel-booking/:bookingId`  
+Cancel booking (if allowed).
+
+---
+
+# ⚡ Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/<your-username>/MovieTicketBooking.git
+cd MovieTicketBooking
+```
+
+---
+
+## Frontend Setup
+
+```bash
+npm install
+npm run dev
+```
+
+Frontend runs at: `http://localhost:5173`
+
+---
+
+## Backend Setup
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+Backend runs at: `http://localhost:5000`
+
+> Current DB connection is configured in `backend/config/database.js` as:
+> `mongodb://127.0.0.1:27017/movieproject`
+
+---
+
+# 🚀 Available Scripts
+
+## Frontend (root)
+
+- `npm run dev` - Start Vite dev server
+- `npm run build` - Production build
+- `npm run preview` - Preview build
+- `npm run lint` - Run ESLint
+
+## Backend (`backend`)
+
+- `npm run dev` - Start backend with nodemon
+- `npm start` - Start backend with node
+
+---
+
+# 👨‍💻 Authors
+
+**Your Name**  
+`https://github.com/<your-username>`
+
+---
+
+# ⭐ Support
+
+If you like this project, please star the repository and share your feedback.
 

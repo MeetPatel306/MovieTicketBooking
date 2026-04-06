@@ -99,14 +99,16 @@ const Login = () => {
           body: JSON.stringify(loginData),
         });
 
-        if (response.ok) {
-          // ✅ Save user in AuthContext so Navbar shows logout
-          await login(email, password);
+        const result = await response.json();
+
+        if (response.ok && result?.success) {
+          // Save real backend user details in auth context
+          await login(email, password, result.user);
 
           setShowOtpModal(false);
           navigate('/movies'); // ✅ go to booking after login
         } else {
-          setError('Login failed. Please try again.');
+          setError(result?.message || 'Login failed. Please try again.');
         }
       } catch (err) {
         setError('An error occurred. Please try again.');

@@ -13,7 +13,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 
 const Profile = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState('');
   const [editedEmail, setEditedEmail] = useState('');
@@ -39,37 +39,27 @@ const Profile = () => {
   // Get actual user display name
   const getUserDisplayName = () => {
     if (!user) return 'User';
-    
-    // If name exists and is not the default "John Doe", use it
-    if (user.name && user.name !== 'John Doe' && user.name.trim() !== '') {
-      return user.name;
-    }
-    
-    // Otherwise, extract from email or use saved name from localStorage
-    if (user.email) {
-      // Check if we have a custom name stored in localStorage
-      const storedUserData = localStorage.getItem('userData');
-      if (storedUserData) {
-        try {
-          const userData = JSON.parse(storedUserData);
-          if (userData.name && userData.name !== 'John Doe') {
-            return userData.name;
-          }
-        } catch (error) {
-          console.error('Error parsing stored user data:', error);
-        }
-      }
-      
-      // Extract username from email as fallback
-      return user.email.split('@')[0];
-    }
-    
+    if (user.name && user.name.trim() !== '') return user.name;
+    if (user.email) return user.email.split('@')[0];
     return 'User';
+  };
+
+  const formatMemberSince = () => {
+    const sourceDate = user?.memberSince || user?.signupTime || user?.createdAt;
+    if (!sourceDate) return 'N/A';
+    try {
+      return new Date(sourceDate).toLocaleDateString('en-IN', {
+        month: 'long',
+        year: 'numeric'
+      });
+    } catch (error) {
+      return 'N/A';
+    }
   };
 
   // Fetch user bookings from database
   const fetchUserBookingsFromDB = async () => {
-    const userName = getUserDisplayName();
+    const userName = user?.name?.trim();
     if (!userName) return [];
     
     try {
@@ -387,21 +377,15 @@ This is your official ticket. Please show this at the theater entrance.
   };
 
   const handleSave = () => {
-    // Save the updated name to localStorage for persistence
-    if (editedName && editedName.trim() !== '') {
-      const userData = {
+    if (editedName && editedName.trim() !== '' && editedEmail && editedEmail.trim() !== '') {
+      updateProfile({
         name: editedName.trim(),
-        email: editedEmail || user?.email,
-      };
-      localStorage.setItem('userData', JSON.stringify(userData));
-      
-      // Update user context if possible (you might need to add an update method to AuthContext)
-      // user.name = editedName.trim();
-      
+        email: editedEmail.trim()
+      });
       setIsEditing(false);
       alert('✅ Profile updated successfully!');
     } else {
-      alert('❌ Please enter a valid name');
+      alert('❌ Please enter valid name and email');
     }
   };
 
@@ -504,7 +488,7 @@ This is your official ticket. Please show this at the theater entrance.
 
               <div className="flex items-center justify-center md:justify-start space-x-2 mb-6">
                 <CalendarIcon className="h-5 w-5 text-gray-400" />
-                <span className="text-gray-300">Member since January 2024</span>
+                <span className="text-gray-300">Member since {formatMemberSince()}</span>
               </div>
 
               {/* Statistics */}
