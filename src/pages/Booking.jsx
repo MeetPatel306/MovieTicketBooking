@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/solid';
 import { useMovies } from '../contexts/MovieContext';
 import { useAuth } from '../contexts/AuthContext';
+import { API_URL } from '../config/api';
 
 const Booking = () => {
   const { movieId } = useParams();
@@ -74,7 +75,7 @@ const Booking = () => {
     const userName = user?.name?.trim();
     if (!userName) return [];
     try {
-      const res = await axios.get(`http://localhost:5000/api/user-bookings/${encodeURIComponent(userName)}`);
+      const res = await axios.get(`${API_URL}/user-bookings/${encodeURIComponent(userName)}`);
       if (res.data.success) {
         return res.data.data;
       }
@@ -90,7 +91,7 @@ const Booking = () => {
     
     try {
       setLoadingSeats(true);
-      const res = await axios.post('http://localhost:5000/api/get-show-bookings', {
+      const res = await axios.post(`${API_URL}/get-show-bookings`, {
         moviename: movieTitle,
         theater: theaterName,
         date: showDate,
@@ -378,7 +379,7 @@ const Booking = () => {
 
       console.log('Booking data being sent:', bookingData);
 
-      const res = await axios.post("http://localhost:5000/api/create-booking", bookingData, {
+      const res = await axios.post(`${API_URL}/create-booking`, bookingData, {
         headers: {
           'Content-Type': 'application/json'
         }

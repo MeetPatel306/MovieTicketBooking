@@ -71,19 +71,26 @@ router.post('/login', async (req, res) => {
         success: false,
         message: 'Invalid credentials'
       });
-    }
+    } 
+    if(!user.comparePassword){
+ return res.status(500).json({
+   success:false,
+   message:"Password method missing"
+ });
+}
+
+const isPasswordValid = await user.comparePassword(password);
 
     // Save login data
     const loginRecord = new LoginData({
-      email,
-      password, // In production, don't save plain password
-      otp,
-      loginTime: loginTime || new Date(),
-      ipAddress: req.ip,
-      userAgent: req.get('User-Agent'),
-      isSuccessful: true,
-      otpVerifiedAt: new Date()
-    });
+ email,
+ otp,
+ loginTime: loginTime || new Date(),
+ ipAddress: req.ip,
+ userAgent: req.get('User-Agent'),
+ isSuccessful: true,
+ otpVerifiedAt: new Date()
+});
 
     await loginRecord.save();
 

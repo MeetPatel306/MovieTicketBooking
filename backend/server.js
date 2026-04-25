@@ -1,176 +1,152 @@
-const express = require('express');
-const cors = require('cors');
-const connectDB = require('./config/database');
-const authRoutes = require('./routes/authRoutes');
-const bookingRoutes = require('./routes/bookingRoutes');
+require("dotenv").config();
+
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
+
+const connectDB = require("./config/database");
+const authRoutes = require("./routes/authRoutes");
+const bookingRoutes = require("./routes/bookingRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Connect to MongoDB
+/* ---------------- DB CONNECT ---------------- */
 connectDB();
 
-// Middleware
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+/* ---------------- CORS ---------------- */
+
+const allowedOrigins = (
+ process.env.FRONTEND_URLS ||
+ "http://localhost:5173,http://127.0.0.1:5173,https://movie-ticket-booking-liart-beta.vercel.app"
+)
+.split(",")
+.map(o => o.trim());
+
+app.use(
+ cors({
+   origin: function(origin, callback){
+      if(!origin) return callback(null,true);
+
+      if(allowedOrigins.includes(origin)){
+         return callback(null,true);
+      }
+
+      return callback(new Error("CORS blocked"));
+   },
+   credentials:true,
+   methods:["GET","POST","PUT","DELETE","PATCH","OPTIONS"],
+   allowedHeaders:["Content-Type","Authorization"]
+ })
+);
+
+/* ---------------- MIDDLEWARE ---------------- */
+
+app.use(express.json({limit:"10mb"}));
+app.use(express.urlencoded({
+ extended:true,
+ limit:"10mb"
 }));
 
-// Body parser middleware - increased limits
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.set('trust proxy', true);
+app.set("trust proxy", true);
 
-// Request logging middleware
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  if (req.body && Object.keys(req.body).length > 0) {
-    console.log('Request Body:', JSON.stringify(req.body, null, 2));
-  }
-  next();
+/* Request logs */
+
+app.use((req,res,next)=>{
+ console.log(
+ `${new Date().toISOString()} ${req.method} ${req.originalUrl}`
+ );
+ next();
 });
 
-// Routes
-app.use('/api', authRoutes);
-app.use('/api', bookingRoutes);
 
-// Health check
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Movie Project API is running!',
-    timestamp: new Date().toISOString(),
-    database: 'movieproject',
-    environment: process.env.NODE_ENV || 'development'
-  });
+/* ---------------- ROUTES ---------------- */
+
+app.use("/api",authRoutes);
+app.use("/api",bookingRoutes);
+
+
+/* ---------------- HEALTH ---------------- */
+
+app.get("/",(req,res)=>{
+ res.json({
+   success:true,
+   message:"Movie Ticket Booking API Running"
+ });
 });
 
-app.get('/', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: '🎬 Welcome to Movie Project API',
-    version: '1.0.0',
-    endpoints: {
-      auth: '/api/signup, /api/login, /api/verify-otp',
-      bookings: '/api/create-booking, /api/user-bookings/:login_name'
-    }
-  });
+app.get("/health",(req,res)=>{
+ res.json({
+   success:true,
+   db:
+   mongoose.connection.readyState===1
+   ? "connected"
+   : "disconnected",
+   env:process.env.NODE_ENV
+ });
 });
 
-// Test database connection endpoint
-app.get('/api/test-db', async (req, res) => {
-  try {
-    const mongoose = require('mongoose');
-    const dbState = mongoose.connection.readyState;
-    const states = {
-      0: 'disconnected',
-      1: 'connected',
-      2: 'connecting',
-      3: 'disconnecting'
-    };
-    
-    res.status(200).json({
-      success: true,
-      database: {
-        status: states[dbState],
-        name: mongoose.connection.name,
-        host: mongoose.connection.host,
-        port: mongoose.connection.port
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Database connection test failed',
-      error: error.message
-    });
-  }
+app.get("/api/test-db",(req,res)=>{
+ res.json({
+   state:mongoose.connection.readyState,
+   dbName:mongoose.connection.name
+ });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error Stack:', err.stack);
-  console.error('Error Details:', {
-    message: err.message,
-    name: err.name,
-    code: err.code
-  });
-  
-  // Handle different types of errors
-  if (err.name === 'ValidationError') {
-    return res.status(400).json({
-      success: false,
-      message: 'Validation Error',
-      errors: Object.values(err.errors).map(e => e.message)
-    });
-  }
-  
-  if (err.name === 'MongoError' || err.name === 'MongoServerError') {
-    return res.status(500).json({
-      success: false,
-      message: 'Database Error',
-      error: err.message
-    });
-  }
-  
-  if (err.code === 11000) {
-    return res.status(409).json({
-      success: false,
-      message: 'Duplicate entry',
-      error: 'Resource already exists'
-    });
-  }
-  
-  // Generic error
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Something went wrong!',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-  });
+
+/* ---------------- ERROR HANDLER ---------------- */
+
+app.use((err,req,res,next)=>{
+ console.error(err);
+
+ if(err.name==="ValidationError"){
+   return res.status(400).json({
+      success:false,
+      message:"Validation Error"
+   });
+ }
+
+ if(err.code===11000){
+   return res.status(409).json({
+      success:false,
+      message:"Duplicate record"
+   });
+ }
+
+ res.status(500).json({
+   success:false,
+   message:err.message || "Server error"
+ });
 });
 
-// 404 handler - must be last
-app.use('*', (req, res) => {
-  console.log(`404 - Route not found: ${req.method} ${req.originalUrl}`);
-  res.status(404).json({ 
-    success: false, 
-    message: `Route ${req.method} ${req.originalUrl} not found`,
-    availableRoutes: [
-      'GET /',
-      'GET /health',
-      'GET /api/test-db',
-      'POST /api/signup',
-      'POST /api/login',
-      'POST /api/verify-otp',
-      'POST /api/create-booking',
-      'GET /api/user-bookings/:login_name',
-      'GET /api/booking-details/:bookingId'
-    ]
-  });
+
+/* ---------------- 404 ---------------- */
+
+app.use("*",(req,res)=>{
+ res.status(404).json({
+   success:false,
+   message:"Route not found"
+ });
 });
 
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  console.log('Received SIGINT. Shutting down gracefully...');
-  const mongoose = require('mongoose');
-  await mongoose.connection.close();
-  process.exit(0);
+
+/* ---------------- SERVER ---------------- */
+
+app.listen(PORT,()=>{
+ console.log(`Server running on ${PORT}`);
 });
 
-process.on('SIGTERM', async () => {
-  console.log('Received SIGTERM. Shutting down gracefully...');
-  const mongoose = require('mongoose');
-  await mongoose.connection.close();
-  process.exit(0);
+
+/* graceful shutdown */
+
+process.on("SIGINT", async ()=>{
+ await mongoose.connection.close();
+ process.exit(0);
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔧 Test DB: http://localhost:${PORT}/api/test-db`);
-  console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+process.on("SIGTERM", async ()=>{
+ await mongoose.connection.close();
+ process.exit(0);
 });
 
-module.exports = app;
+module.exports=app;

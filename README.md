@@ -10,7 +10,10 @@ MovieTicketBooking is a full-stack web app for browsing movies, selecting theate
 **Frontend (Local):** `http://localhost:5173`
 **Backend (Local):** `http://localhost:5000`
 
+<<<<<<< HEAD
 **Repository:** `https://github.com/<MeetPatel306>/MovieTicketBooking`
+=======
+>>>>>>> f42d815 (backend ready)
 ---
 
 # ✨ Features
@@ -208,11 +211,18 @@ Backend runs at: `http://localhost:5000`
 
 # 👨‍💻 Authors
 
+<<<<<<< HEAD
 **Your Name**  
 `https://github.com/<MeetPatel306>`
 
+=======
+>>>>>>> f42d815 (backend ready)
 ---
 
 # ⭐ Support
 
+<<<<<<< HEAD
 If you like this project, please star the repository and share your feedback.
+=======
+If you like this project, please star the repository and share your feedback.
+>>>>>>> f42d815 (backend ready)

@@ -11,6 +11,7 @@ import {
   ArrowDownTrayIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
+import { API_URL } from '../config/api';
 
 const Profile = () => {
   const { user, logout, updateProfile } = useAuth();
@@ -63,7 +64,7 @@ const Profile = () => {
     if (!userName) return [];
     
     try {
-      const res = await axios.get(`http://localhost:5000/api/user-bookings/${userName}`);
+      const res = await axios.get(`${API_URL}/user-bookings/${userName}`);
       if (res.data.success) {
         return res.data.data.map(booking => ({
           bookingId: booking._id || `BK${Date.now()}`,

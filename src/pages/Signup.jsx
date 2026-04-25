@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EyeIcon, EyeSlashIcon, FilmIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
+import { API_URL } from '../config/api';
 
 const Signup = () => {
   const [name, setName] = useState('');
@@ -113,7 +114,7 @@ const Signup = () => {
         };
         
         // Call your API to save signup data
-        const response = await fetch('http://localhost:5000/api/signup', {
+        const response = await fetch(`${API_URL}/signup`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(signupData),
