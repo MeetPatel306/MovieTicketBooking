@@ -18,7 +18,7 @@ connectDB();
 
 const allowedOrigins = (
  process.env.FRONTEND_URLS ||
- "http://localhost:5173,http://127.0.0.1:5173,https://movie-ticket-booking-liart-beta.vercel.app"
+ "http://localhost:5173,http://127.0.0.1:5173,https://movie-ticket-booking-ikpq1a814-meetpatel30506-7334s-projects.vercel.app/"
 )
 .split(",")
 .map(o => o.trim());
