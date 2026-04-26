@@ -15,138 +15,106 @@ const PORT = process.env.PORT || 5000;
 connectDB();
 
 /* ---------------- CORS ---------------- */
-
-const allowedOrigins = (
- process.env.FRONTEND_URLS ||
- "http://localhost:5173,http://127.0.0.1:5173,https://movie-ticket-booking-ikpq1a814-meetpatel30506-7334s-projects.vercel.app/"
-)
-.split(",")
-.map(o => o.trim());
-
 app.use(
- cors({
-   origin: function(origin, callback){
-      if(!origin) return callback(null,true);
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (mobile apps, curl, Postman)
+      if (!origin) return callback(null, true);
 
-      if(allowedOrigins.includes(origin)){
-         return callback(null,true);
+      // Allow localhost
+      if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
+        return callback(null, true);
       }
 
-      return callback(new Error("CORS blocked"));
-   },
-   credentials:true,
-   methods:["GET","POST","PUT","DELETE","PATCH","OPTIONS"],
-   allowedHeaders:["Content-Type","Authorization"]
- })
+      // Allow ALL Vercel deployments for this project
+      if (origin.includes("vercel.app")) {
+        return callback(null, true);
+      }
+
+      // Allow Render (for internal calls)
+      if (origin.includes("onrender.com")) {
+        return callback(null, true);
+      }
+
+      // Block everything else
+      console.log("CORS blocked origin:", origin);
+      return callback(new Error("CORS blocked: " + origin));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
 );
 
 /* ---------------- MIDDLEWARE ---------------- */
-
-app.use(express.json({limit:"10mb"}));
-app.use(express.urlencoded({
- extended:true,
- limit:"10mb"
-}));
-
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.set("trust proxy", true);
 
 /* Request logs */
-
-app.use((req,res,next)=>{
- console.log(
- `${new Date().toISOString()} ${req.method} ${req.originalUrl}`
- );
- next();
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} ${req.method} ${req.originalUrl}`);
+  next();
 });
-
 
 /* ---------------- ROUTES ---------------- */
-
-app.use("/api",authRoutes);
-app.use("/api",bookingRoutes);
-
+app.use("/api", authRoutes);
+app.use("/api", bookingRoutes);
 
 /* ---------------- HEALTH ---------------- */
-
-app.get("/",(req,res)=>{
- res.json({
-   success:true,
-   message:"Movie Ticket Booking API Running"
- });
+app.get("/", (req, res) => {
+  res.json({ success: true, message: "Movie Ticket Booking API Running" });
 });
 
-app.get("/health",(req,res)=>{
- res.json({
-   success:true,
-   db:
-   mongoose.connection.readyState===1
-   ? "connected"
-   : "disconnected",
-   env:process.env.NODE_ENV
- });
+app.get("/health", (req, res) => {
+  res.json({
+    success: true,
+    db: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    env: process.env.NODE_ENV,
+  });
 });
 
-app.get("/api/test-db",(req,res)=>{
- res.json({
-   state:mongoose.connection.readyState,
-   dbName:mongoose.connection.name
- });
+app.get("/api/test-db", (req, res) => {
+  res.json({
+    state: mongoose.connection.readyState,
+    dbName: mongoose.connection.name,
+  });
 });
-
 
 /* ---------------- ERROR HANDLER ---------------- */
+app.use((err, req, res, next) => {
+  console.error(err);
 
-app.use((err,req,res,next)=>{
- console.error(err);
+  if (err.name === "ValidationError") {
+    return res.status(400).json({ success: false, message: "Validation Error" });
+  }
 
- if(err.name==="ValidationError"){
-   return res.status(400).json({
-      success:false,
-      message:"Validation Error"
-   });
- }
+  if (err.code === 11000) {
+    return res.status(409).json({ success: false, message: "Duplicate record" });
+  }
 
- if(err.code===11000){
-   return res.status(409).json({
-      success:false,
-      message:"Duplicate record"
-   });
- }
-
- res.status(500).json({
-   success:false,
-   message:err.message || "Server error"
- });
+  res.status(500).json({ success: false, message: err.message || "Server error" });
 });
-
 
 /* ---------------- 404 ---------------- */
-
-app.use("*",(req,res)=>{
- res.status(404).json({
-   success:false,
-   message:"Route not found"
- });
+app.use("*", (req, res) => {
+  res.status(404).json({ success: false, message: "Route not found" });
 });
-
 
 /* ---------------- SERVER ---------------- */
-
-app.listen(PORT,()=>{
- console.log(`Server running on ${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server running on ${PORT}`);
 });
-
 
 /* graceful shutdown */
-
-process.on("SIGINT", async ()=>{
- await mongoose.connection.close();
- process.exit(0);
+process.on("SIGINT", async () => {
+  await mongoose.connection.close();
+  process.exit(0);
 });
 
-process.on("SIGTERM", async ()=>{
- await mongoose.connection.close();
- process.exit(0);
+process.on("SIGTERM", async () => {
+  await mongoose.connection.close();
+  process.exit(0);
 });
 
-module.exports=app;
+module.exports = app;
