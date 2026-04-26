@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }) => {
         userData.avatar ||
         'https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=400',
       memberSince: userData.memberSince || userData.signupTime || userData.createdAt || new Date().toISOString(),
-      createdAt: userData.createdAt || userData.signupTime || new Date().toISOString()
+      createdAt: userData.createdAt || userData.signupTime || new Date().toISOString(),
     };
   };
 
@@ -42,6 +42,7 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(false);
   }, []);
 
+  // ✅ Login — saves real user from backend
   const login = async (email, password, userData = null) => {
     setIsLoading(true);
     try {
@@ -56,10 +57,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signup = async (name, email, password) => {
+  // ✅ Signup — now accepts real user data from backend and auto logs in
+  const signup = async (name, email, password, userData = null) => {
     setIsLoading(true);
     try {
-      const resolvedUser = normalizeUser({ name, email });
+      const resolvedUser = normalizeUser(userData || { name, email });
       setUser(resolvedUser);
       localStorage.setItem('user', JSON.stringify(resolvedUser));
       return true;

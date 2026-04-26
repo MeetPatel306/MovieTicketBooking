@@ -19,19 +19,17 @@ const Signup = () => {
   const [timeLeft, setTimeLeft] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState('');
-  
+
   const { signup } = useAuth();
   const navigate = useNavigate();
 
-  // Generate 6-digit OTP
   const generateOtp = () => {
     const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
     setGeneratedOtp(newOtp);
-    console.log('Generated OTP:', newOtp); // In production, send via SMS/Email
+    console.log('Generated OTP:', newOtp);
     return newOtp;
   };
 
-  // Start countdown timer
   const startTimer = () => {
     setTimeLeft(60);
     setCanResend(false);
@@ -64,9 +62,7 @@ const Signup = () => {
     setIsLoading(true);
 
     try {
-      // Validate form data
       if (name && email && password) {
-        // Generate and show OTP
         generateOtp();
         setShowOtpModal(true);
         startTimer();
@@ -86,8 +82,6 @@ const Signup = () => {
       const newOtp = [...otp];
       newOtp[index] = value;
       setOtp(newOtp);
-
-      // Auto focus next input
       if (value && index < 5) {
         document.getElementById(`otp-${index + 1}`).focus();
       }
@@ -102,36 +96,38 @@ const Signup = () => {
 
   const verifyOtp = async () => {
     const enteredOtp = otp.join('');
-    if (enteredOtp === generatedOtp) {
-      // Save to MongoDB and create account
-      try {
-        const signupData = {
-          name,
-          email,
-          password,
-          otp: enteredOtp,
-          signupTime: new Date(),
-        };
-        
-        // Call your API to save signup data
-        const response = await fetch(`${API_URL}/signup`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(signupData),
-        });
-
-        if (response.ok) {
-          setShowOtpModal(false);
-          navigate('/');
-        } else {
-  const errorData = await response.json();
-  setError(errorData.message || 'Account creation failed. Please try again.');
-}
-      } catch (err) {
-        setError('An error occurred. Please try again.');
-      }
-    } else {
+    if (enteredOtp !== generatedOtp) {
       setError('Invalid OTP. Please try again.');
+      return;
+    }
+
+    try {
+      const signupData = {
+        name,
+        email,
+        password,
+        otp: enteredOtp,
+        signupTime: new Date(),
+      };
+
+      const response = await fetch(`${API_URL}/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(signupData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result?.success) {
+        // ✅ Auto login after signup — no need to login again
+        await signup(result.user.name, result.user.email, password, result.user);
+        setShowOtpModal(false);
+        navigate('/'); // ✅ Go to home after signup
+      } else {
+        setError(result?.message || 'Account creation failed. Please try again.');
+      }
+    } catch (err) {
+      setError('An error occurred. Please try again.');
     }
   };
 
@@ -160,15 +156,10 @@ const Signup = () => {
             <div className="flex justify-center mb-6">
               <FilmIcon className="h-12 w-12 text-blue-500" />
             </div>
-            <h2 className="text-3xl font-bold text-white">
-              Create your account
-            </h2>
+            <h2 className="text-3xl font-bold text-white">Create your account</h2>
             <p className="mt-2 text-sm text-gray-400">
               Or{' '}
-              <Link
-                to="/login"
-                className="font-medium text-blue-400 hover:text-blue-300"
-              >
+              <Link to="/login" className="font-medium text-blue-400 hover:text-blue-300">
                 sign in to your existing account
               </Link>
             </p>
@@ -294,13 +285,9 @@ const Signup = () => {
             />
             <label htmlFor="agree-terms" className="ml-2 block text-sm text-gray-300">
               I agree to the{' '}
-              <a href="#" className="text-blue-400 hover:text-blue-300">
-                Terms of Service
-              </a>{' '}
+              <a href="#" className="text-blue-400 hover:text-blue-300">Terms of Service</a>{' '}
               and{' '}
-              <a href="#" className="text-blue-400 hover:text-blue-300">
-                Privacy Policy
-              </a>
+              <a href="#" className="text-blue-400 hover:text-blue-300">Privacy Policy</a>
             </label>
           </div>
 
@@ -321,10 +308,7 @@ const Signup = () => {
           <div className="text-center">
             <p className="text-sm text-gray-400">
               Already have an account?{' '}
-              <Link
-                to="/login"
-                className="font-medium text-blue-400 hover:text-blue-300"
-              >
+              <Link to="/login" className="font-medium text-blue-400 hover:text-blue-300">
                 Sign in here
               </Link>
             </p>
@@ -349,10 +333,7 @@ const Signup = () => {
             >
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-2xl font-bold text-white">Verify OTP</h3>
-                <button
-                  onClick={() => setShowOtpModal(false)}
-                  className="text-gray-400 hover:text-white"
-                >
+                <button onClick={() => setShowOtpModal(false)} className="text-gray-400 hover:text-white">
                   <XMarkIcon className="h-6 w-6" />
                 </button>
               </div>
@@ -383,10 +364,7 @@ const Signup = () => {
                   Time remaining: <span className="text-blue-400 font-mono">{formatTime(timeLeft)}</span>
                 </p>
                 {canResend ? (
-                  <button
-                    onClick={resendOtp}
-                    className="text-blue-400 hover:text-blue-300 text-sm font-medium"
-                  >
+                  <button onClick={resendOtp} className="text-blue-400 hover:text-blue-300 text-sm font-medium">
                     Resend OTP
                   </button>
                 ) : (
@@ -407,6 +385,6 @@ const Signup = () => {
       </AnimatePresence>
     </div>
   );
-};``
+};
 
 export default Signup;

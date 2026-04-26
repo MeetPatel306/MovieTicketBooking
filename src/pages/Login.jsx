@@ -16,19 +16,17 @@ const Login = () => {
   const [timeLeft, setTimeLeft] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState('');
-  
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // Generate 6-digit OTP
   const generateOtp = () => {
     const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
     setGeneratedOtp(newOtp);
-    console.log('Generated OTP:', newOtp); // In production, send via SMS/Email
+    console.log('Generated OTP:', newOtp);
     return newOtp;
   };
 
-  // Start countdown timer
   const startTimer = () => {
     setTimeLeft(60);
     setCanResend(false);
@@ -70,7 +68,6 @@ const Login = () => {
       const newOtp = [...otp];
       newOtp[index] = value;
       setOtp(newOtp);
-
       if (value && index < 5) {
         document.getElementById(`otp-${index + 1}`).focus();
       }
@@ -85,37 +82,37 @@ const Login = () => {
 
   const verifyOtp = async () => {
     const enteredOtp = otp.join('');
-    if (enteredOtp === generatedOtp) {
-      try {
-        const loginData = {
-          email,
-          password,
-          otp: enteredOtp,
-          loginTime: new Date(),
-        };
-        
-        const response = await fetch(`${API_URL}/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(loginData),
-        });
-
-        const result = await response.json();
-
-        if (response.ok && result?.success) {
-          // Save real backend user details in auth context
-          await login(email, password, result.user);
-
-          setShowOtpModal(false);
-          navigate('/movies'); // ✅ go to booking after login
-        } else {
-          setError(result?.message || 'Login failed. Please try again.');
-        }
-      } catch (err) {
-        setError('An error occurred. Please try again.');
-      }
-    } else {
+    if (enteredOtp !== generatedOtp) {
       setError('Invalid OTP. Please try again.');
+      return;
+    }
+
+    try {
+      const loginData = {
+        email,
+        password,
+        otp: enteredOtp,
+        loginTime: new Date(),
+      };
+
+      const response = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result?.success) {
+        // ✅ Save user in context and localStorage
+        await login(email, password, result.user);
+        setShowOtpModal(false);
+        navigate('/movies'); // ✅ Go to movies page after login
+      } else {
+        setError(result?.message || 'Login failed. Please try again.');
+      }
+    } catch (err) {
+      setError('An error occurred. Please try again.');
     }
   };
 
@@ -144,15 +141,10 @@ const Login = () => {
             <div className="flex justify-center mb-6">
               <FilmIcon className="h-12 w-12 text-blue-500" />
             </div>
-            <h2 className="text-3xl font-bold text-white">
-              Sign in to your account
-            </h2>
+            <h2 className="text-3xl font-bold text-white">Sign in to your account</h2>
             <p className="mt-2 text-sm text-gray-400">
               Or{' '}
-              <Link
-                to="/signup"
-                className="font-medium text-blue-400 hover:text-blue-300"
-              >
+              <Link to="/signup" className="font-medium text-blue-400 hover:text-blue-300">
                 create a new account
               </Link>
             </p>
@@ -233,7 +225,6 @@ const Login = () => {
                 Remember me
               </label>
             </div>
-
             <div className="text-sm">
               <a href="#" className="font-medium text-blue-400 hover:text-blue-300">
                 Forgot your password?
@@ -258,10 +249,7 @@ const Login = () => {
           <div className="text-center">
             <p className="text-sm text-gray-400">
               Don't have an account?{' '}
-              <Link
-                to="/signup"
-                className="font-medium text-blue-400 hover:text-blue-300"
-              >
+              <Link to="/signup" className="font-medium text-blue-400 hover:text-blue-300">
                 Sign up here
               </Link>
             </p>
@@ -286,10 +274,7 @@ const Login = () => {
             >
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-2xl font-bold text-white">Verify OTP</h3>
-                <button
-                  onClick={() => setShowOtpModal(false)}
-                  className="text-gray-400 hover:text-white"
-                >
+                <button onClick={() => setShowOtpModal(false)} className="text-gray-400 hover:text-white">
                   <XMarkIcon className="h-6 w-6" />
                 </button>
               </div>
@@ -320,10 +305,7 @@ const Login = () => {
                   Time remaining: <span className="text-blue-400 font-mono">{formatTime(timeLeft)}</span>
                 </p>
                 {canResend ? (
-                  <button
-                    onClick={resendOtp}
-                    className="text-blue-400 hover:text-blue-300 text-sm font-medium"
-                  >
+                  <button onClick={resendOtp} className="text-blue-400 hover:text-blue-300 text-sm font-medium">
                     Resend OTP
                   </button>
                 ) : (
