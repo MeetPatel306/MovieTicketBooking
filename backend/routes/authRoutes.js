@@ -8,8 +8,15 @@ router.post('/signup', async (req, res) => {
   try {
     const { name, email, password, otp, signupTime } = req.body;
 
+    if (!name || !email || !password || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: 'All fields are required: name, email, password, otp'
+      });
+    }
+
     // Check if user already exists
-    const existingUser = await SignupData.findOne({ email });
+    const existingUser = await SignupData.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -42,6 +49,14 @@ router.post('/signup', async (req, res) => {
 
   } catch (error) {
     console.error('Signup error:', error);
+
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email already exists'
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: 'Server error during signup',
@@ -50,47 +65,47 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// Login Route
+// Login Route  ← THIS WAS BROKEN BEFORE (duplicate variable declarations)
 router.post('/login', async (req, res) => {
   try {
     const { email, password, otp, loginTime } = req.body;
 
-    // Find user in signup collection
-    const user = await SignupData.findOne({ email });
-    if (!user) {
+    if (!email || !password || !otp) {
       return res.status(400).json({
         success: false,
-        message: 'User not found'
+        message: 'Email, password, and OTP are required'
       });
     }
 
-    // Verify password
+    // Find user in signup collection
+    const user = await SignupData.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'User not found. Please sign up first.'
+      });
+    }
+
+    // Verify password using the method defined in SignupData model
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
       return res.status(400).json({
         success: false,
         message: 'Invalid credentials'
       });
-    } 
-    if(!user.comparePassword){
- return res.status(500).json({
-   success:false,
-   message:"Password method missing"
- });
-}
+    }
 
-const isPasswordValid = await user.comparePassword(password);
-
-    // Save login data
+    // Save login record
     const loginRecord = new LoginData({
- email,
- otp,
- loginTime: loginTime || new Date(),
- ipAddress: req.ip,
- userAgent: req.get('User-Agent'),
- isSuccessful: true,
- otpVerifiedAt: new Date()
-});
+      email,
+      password: password, // stored as-is (LoginData schema requires it)
+      otp,
+      loginTime: loginTime || new Date(),
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      isSuccessful: true,
+      otpVerifiedAt: new Date()
+    });
 
     await loginRecord.save();
 

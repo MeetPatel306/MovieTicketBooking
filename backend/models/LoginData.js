@@ -9,11 +9,13 @@ const loginSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true
+    required: false, // FIX: not always sent, login is a log record only
+    default: null
   },
   otp: {
     type: String,
-    required: true
+    required: false, // FIX: make optional so login never fails due to this
+    default: null
   },
   loginTime: {
     type: Date,
