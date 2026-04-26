@@ -124,8 +124,9 @@ const Signup = () => {
           setShowOtpModal(false);
           navigate('/');
         } else {
-          setError('Account creation failed. Please try again.');
-        }
+  const errorData = await response.json();
+  setError(errorData.message || 'Account creation failed. Please try again.');
+}
       } catch (err) {
         setError('An error occurred. Please try again.');
       }
@@ -406,6 +407,6 @@ const Signup = () => {
       </AnimatePresence>
     </div>
   );
-};
+};``
 
 export default Signup;
