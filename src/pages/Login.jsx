@@ -107,7 +107,7 @@ const Login = () => {
         // ✅ Save user in context and localStorage
         await login(email, password, result.user);
         setShowOtpModal(false);
-        navigate('/movies'); // ✅ Go to movies page after login
+        navigate('/'); // ✅ Go to movies page after login
       } else {
         setError(result?.message || 'Login failed. Please try again.');
       }
